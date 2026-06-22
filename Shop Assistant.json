@@ -1,0 +1,342 @@
+{
+  "name": "Shop Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "*"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "fe87f6eb-5d02-45f5-990d-c723a2f6af9d",
+      "name": "Telegram Trigger",
+      "webhookId": "31125ae8-6b9c-423f-a30f-1963ebbb66c4",
+      "credentials": {
+        "telegramApi": {
+          "id": "toukwDS7KOWVAWZ3",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Ты ассистент магазина одежды BrandUA в Instagram/Telegram.\n\nПРАВИЛА:\n- Отвечай на основе базы знаний (используй tool поиска)\n- Если клиент готов сделать заказ - собери имя, телефон, что хочет купить\n  и запиши через tool записи лидов\n- Будь дружелюбным и кратким\n- Если не знаешь ответа - скажи что передашь менеджеру"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "7f8342e0-758d-4ceb-914b-81ffa02e9bc7",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.5",
+          "mode": "list",
+          "cachedResultName": "gpt-5.5"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        208
+      ],
+      "id": "582037c1-aa43-47d0-b987-202357a473a6",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "maeHGMlTNtYaGLWL",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        224,
+        208
+      ],
+      "id": "ecc4248d-9999-489f-97d9-662a2351a0f6",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        0
+      ],
+      "id": "ead972b0-5b4e-4983-9630-85f27cf83c95",
+      "name": "Send a text message",
+      "webhookId": "1e66f7a5-f671-4131-831f-8fbde40b96ed",
+      "credentials": {
+        "telegramApi": {
+          "id": "toukwDS7KOWVAWZ3",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "База знаний магазина — доставка, возврат, оплата",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n-rag",
+          "mode": "list",
+          "cachedResultName": "n8n-rag"
+        },
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        208
+      ],
+      "id": "2c2b0f40-c2c6-4ba5-89c7-4938bc3b3542",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "9aXRys9X8h9P5Puw",
+          "name": "Pinecone account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 1536
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        416
+      ],
+      "id": "981c7d6e-f386-45e5-9eb7-4eaf6c2d53e4",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "maeHGMlTNtYaGLWL",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1uHuW1hZhV5FQkRe7y1eTDmi46U6vnxFZA0ynjaaPOPw",
+          "mode": "list",
+          "cachedResultName": "Ферма",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uHuW1hZhV5FQkRe7y1eTDmi46U6vnxFZA0ynjaaPOPw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1661065184,
+          "mode": "list",
+          "cachedResultName": "Лист6",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uHuW1hZhV5FQkRe7y1eTDmi46U6vnxFZA0ynjaaPOPw/edit#gid=1661065184"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "имя:": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('______using_to_match_', ``, 'string') }}",
+            "телефон:": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('________', ``, 'string') }}",
+            "запрос:": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('_______', ``, 'string') }}",
+            "дата:": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "имя:"
+          ],
+          "schema": [
+            {
+              "id": "имя:",
+              "displayName": "имя:",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "телефон:",
+              "displayName": "телефон:",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "запрос:",
+              "displayName": "запрос:",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "дата:",
+              "displayName": "дата:",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        640,
+        208
+      ],
+      "id": "1e8c0e3a-2779-48b1-abdb-fbd5f830807b",
+      "name": "Append or update row in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ZIqOgAM6yAjhsk75",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "0C9TD1DqgkRR0n2S",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "e60c7b3b-a3bc-48fd-9b7e-97df01ec51cf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ec037f4995fe4f0ea6f2f1be90ce292f833311bd67d80a9e801d78d44078c16a"
+  },
+  "nodeGroups": [],
+  "id": "sh5jrNQaSYOGIZq2",
+  "tags": []
+}
